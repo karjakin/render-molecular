@@ -21,6 +21,20 @@ pinecone_api_key = os.getenv("PINECONE_API_KEY")
 tavily_api_key = os.getenv("TAVILY_API_KEY")
 langsmith_api_key = os.getenv("LANGSMITH_API_KEY")
 groq_api_key = os.getenv("GROQ_API_KEY")
+groq_api_key2 = os.getenv("GROQ_API_KEY2")
+groq_api_key3 = os.getenv("GROQ_API_KEY3")
+groq_api_key4 = os.getenv("GROQ_API_KEY4")  
+
+api_keys = [groq_api_key, groq_api_key2, groq_api_key3, groq_api_key4]
+api_key_index = 0
+
+def get_current_api_key():
+  global api_key_index
+  api_key = api_keys[api_key_index]
+  api_key_index = (api_key_index + 1) % len(api_keys)  # Cicla al inicio al llegar al final
+  return api_key
+
+
 
 pc = Pinecone(api_key=pinecone_api_key)
 
@@ -86,7 +100,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # Configuración del modelo y plantilla de prompts
-llm = ChatGroq(temperature=0, model_name="llama-3.2-3b-preview", api_key=groq_api_key)
+llm = ChatGroq(temperature=0, model_name="llama-3.2-3b-preview",  api_key=get_current_api_key())
 
 system_template = """
 You are a grader assessing the relevance of a retrieved document to a user question.
@@ -138,6 +152,7 @@ def evaluate_relevance(state):
 def router_gen(state):
 
     print("---ROUTER---")
+    print("-----")
     # Verificar si hay documentos relevantes
     relevant_docs = [doc for doc in state["documents"] if doc.get("relevance") == "yes"]
     
@@ -204,7 +219,7 @@ def web_search(state):
 
 
 # Configuración de `chain_rag`
-llm= ChatGroq(temperature=0, model_name="llama-3.2-3b-preview", api_key=groq_api_key)
+llm= ChatGroq(temperature=0, model_name="llama-3.2-3b-preview",  api_key=get_current_api_key())
 
 rag_template = """
 You are an assistant for question-answering tasks.
@@ -221,7 +236,7 @@ Now, review the user question:
 
 Provide an answer to this question using only the above context. 
 
-Use five sentences maximum and keep the answer concise.
+Use six sentences maximum and keep the answer concise.
 
 try to use LaTex if you see in the context.
 Answer:
@@ -258,6 +273,11 @@ def final_rag(state):
 
     # Actualizar el estado con la respuesta final
     state["final_response"] = response
+
+    print("-------")
+
+    print("FINAL STATE:")
+    print(state)
 
     # Retornar el estado completo
     return state
